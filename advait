@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Summarizer</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #49beaa;
+            --accent-color: #58b4ff;
+            --dark-bg: #000000;
+            --darker-bg: #121212;
+            --medium-bg: #1e1e1e;
+            --light-bg: #2a2a2a;
+            --dark-text: #e0e0e0;
+            --light-text: #ffffff;
+            --muted-text: #a0a0a0;
+            --border-color: #333333;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--dark-bg);
+            color: var(--dark-text);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        header {
+            background-color: var(--darker-bg);
+            color: var(--light-text);
+            padding: 1.5rem 0;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .title {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent-color);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            font-weight: normal;
+            opacity: 0.9;
+        }
+        
+        .main {
+            margin-top: 2rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+        
+        @media (min-width: 768px) {
+            .main {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        .input-section, .output-section {
+            background-color: var(--medium-bg);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--secondary-color);
+        }
+        
+        .text-area {
+            width: 100%;
+            height: 300px;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            resize: none;
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--muted-text);
+        }
+        
+        select, input {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+        }
+        
+        .btn {
+            background-color: var(--accent-color);
+            color: var(--light-text);
+            border: none;
+            border-radius: 4px;
+            padding: 0.7rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .btn:hover {
+            background-color: #4199e6;
+            box-shadow: 0 0 8px rgba(88, 180, 255, 0.5);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #3a5a84;
+            box-shadow: 0 0 8px rgba(74, 111, 165, 0.5);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .output-content {
+            height: 300px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-y: auto;
+            background-color: var(--light-bg);
+            line-height: 1.6;
+            color: var(--dark-text);
+        }
+        
+        .stats {
+            margin-top: 1rem;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            background-color: var(--darker-bg);
+            padding: 0.7rem 1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            border: 1px solid var(--border-color);
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 1.5rem 0;
+            color: var(--muted-text);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 1rem 0;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: var(--accent-color);
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1rem;
+        }
+        
+        .tab {
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            color: var(--muted-text);
+        }
+        
+        .tab.active {
+            border-bottom: 3px solid var(--accent-color);
+            font-weight: 600;
+            color: var(--light-text);
+        }
+        
+        .tab:hover:not(.active) {
+            background-color: var(--light-bg);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .file-upload {
+            border: 2px dashed var(--border-color);
+            border-radius: 6px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            transition: all 0.2s;
+            background-color: var(--darker-bg);
+        }
+        
+        .file-upload:hover {
+            border-color: var(--accent-color);
+        }
+        
+        .file-upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+        
+        .file-upload-text {
+            margin-bottom: 1rem;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-label {
+            display: inline-block;
+            padding: 0.7rem 1.5rem;
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        
+        .file-label:hover {
+            background-color: #3a5a84;
+            box-shadow: 0 0 8px rgba(74, 111, 165, 0.5);
+        }
+        
+        .file-info {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: var(--muted-text);
+        }
+        
+        .file-name {
+            font-weight: 600;
+            word-break: break-all;
+            color: var(--accent-color);
+        }
+        
+        .placeholder-text {
+            color: var(--muted-text);
+            font-style: italic;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--darker-bg);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1 class="title">Text Summarizer</h1>
+            <p class="subtitle">Create concise summaries of your lengthy texts</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <main class="main">
+            <section class="input-section">
+                <h2 class="section-title">Input</h2>
+                
+                <div class="tabs">
+                    <div class="tab active" data-tab="text-input">Text Input</div>
+                    <div class="tab" data-tab="file-upload">File Upload</div>
+                </div>
+                
+                <div id="text-input" class="tab-content active">
+                    <textarea id="input-text" class="text-area" placeholder="Paste your long text here..."></textarea>
+                </div>
+                
+                <div id="file-upload" class="tab-content">
+                    <div class="file-upload" id="drop-area">
+                        <div class="file-upload-icon">📄</div>
+                        <p class="file-upload-text">Drag & drop your file here or click to browse</p>
+                        <input type="file" id="file-input" class="file-input" accept=".doc,.docx,.pdf,.txt">
+                        <label for="file-input" class="file-label">Choose File</label>
+                        <div class="file-info">
+                            <p>Supported formats: .txt, .pdf, .doc, .docx</p>
+                            <p id="file-name"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="summary-length">Summary Length</label>
+                        <select id="summary-length">
+                            <option value="short">Short (10-20%)</option>
+                            <option value="medium" selected>Medium (20-30%)</option>
+                            <option value="long">Long (30-40%)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="summary-type">Summary Type</label>
+                        <select id="summary-type">
+                            <option value="extractive" selected>Extractive (Key Sentences)</option>
+                            <option value="bullet">Bullet Points</option>
+                        </select>
+                    </div>
+                </div>
+                <button id="summarize-btn" class="btn btn-primary">Summarize Text</button>
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Generating summary...</p>
+                </div>
+            </section>
+            
+            <section class="output-section">
+                <h2 class="section-title">Summary</h2>
+                <div id="output-content" class="output-content">
+                    <p class="placeholder-text">Your summary will appear here...</p>
+                </div>
+                <div class="stats">
+                    <div class="stat-item">Original Words: <span id="original-count" class="stat-value">0</span></div>
+                    <div class="stat-item">Summary Words: <span id="summary-count" class="stat-value">0</span></div>
+                    <div class="stat-item">Reduction: <span id="reduction-percent" class="stat-value">0%</span></div>
+                </div>
+                <div class="button-group">
+                    <button id="copy-btn" class="btn">Copy Summary</button>
+                    <button id="download-btn" class="btn">Download Summary</button>
+                    <button id="clear-btn" class="btn">Clear All</button>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <p>Text Summarizer © 2025 | Created with ❤️</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up PDF.js worker
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+            
+            // DOM elements
+            const inputText = document.getElementById('input-text');
+            const summaryLength = document.getElementById('summary-length');
+            const summaryType = document.getElementById('summary-type');
+            const summarizeBtn = document.getElementById('summarize-btn');
+            const outputContent = document.getElementById('output-content');
+            const originalCount = document.getElementById('original-count');
+            const summaryCount = document.getElementById('summary-count');
+            const reductionPercent = document.getElementById('reduction-percent');
+            const copyBtn = document.getElementById('copy-btn');
+            const downloadBtn = document.getElementById('download-btn');
+            const clearBtn = document.getElementById('clear-btn');
+            const loading = document.querySelector('.loading');
+            const fileInput = document.getElementById('file-input');
+            const fileName = document.getElementById('file-name');
+            const dropArea = document.getElementById('drop-area');
+            
+            // Tab functionality
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(tc => tc.classList.remove('active'));
+                    
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.tab).classList.add('active');
+                });
+            });
+            
+            // File upload handling
+            fileInput.addEventListener('change', handleFileSelect);
+            
+            // Drag and drop functionality
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                dropArea.style.borderColor = '#58b4ff';
+                dropArea.style.backgroundColor = '#121a26';
+            }
+            
+            function unhighlight() {
+                dropArea.style.borderColor = '#333333';
+                dropArea.style.backgroundColor = '#121212';
+            }
+            
+            dropArea.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files.length) {
+                    fileInput.files = files;
+                    handleFileSelect();
+                }
+            }
+            
+            function handleFileSelect() {
+                const file = fileInput.files[0];
+                if (!file) return;
+                
+                fileName.textContent = `Selected: ${file.name}`;
+                
+                loading.style.display = 'block';
+                
+                const fileExtension = file.name.split('.').pop().toLowerCase();
+                
+                // Process different file types
+                if (fileExtension === 'txt') {
+                    readTextFile(file);
+                } else if (fileExtension === 'pdf') {
+                    readPdfFile(file);
+                } else if (fileExtension === 'doc' || fileExtension === 'docx') {
+                    readWordFile(file);
+                } else {
+                    alert('Unsupported file format. Please upload a .txt, .pdf, .doc, or .docx file.');
+                    loading.style.display = 'none';
+                }
+            }
+            
+            function readTextFile(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    inputText.value = e.target.result;
+                    // Switch to text input tab
+                    tabs[0].click();
+                    loading.style.display = 'none';
+                    updateWordCount();
+                };
+                reader.readAsText(file);
+            }
+            
+            function readPdfFile(file) {
+                const fileReader = new FileReader();
+                
+                fileReader.onload = function() {
+                    const typedarray = new Uint8Array(this.result);
+                    
+                    pdfjsLib.getDocument(typedarray).promise.then(function(pdf) {
+                        let textContent = '';
+                        let pendingPages = pdf.numPages;
+                        
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            pdf.getPage(i).then(function(page) {
+                                page.getTextContent().then(function(content) {
+                                    const strings = content.items.map(item => item.str);
+                                    textContent += strings.join(' ') + '\n';
+                                    
+                                    pendingPages--;
+                                    if (pendingPages === 0) {
+                                        inputText.value = textContent;
+                                        tabs[0].click();
+                                        loading.style.display = 'none';
+                                        updateWordCount();
+                                    }
+                                });
+                            });
+                        }
+                    }).catch(function(error) {
+                        console.error('Error reading PDF:', error);
+                        alert('Error reading PDF file. Please try another file.');
+                        loading.style.display = 'none';
+                    });
+                };
+                
+                fileReader.readAsArrayBuffer(file);
+            }
+            
+            function readWordFile(file) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    mammoth.extractRawText({arrayBuffer: e.target.result})
+                        .then(function(result) {
+                            inputText.value = result.value;
+                            tabs[0].click();
+                            loading.style.display = 'none';
+                            updateWordCount();
+                        })
+                        .catch(function(error) {
+                            console.error('Error reading Word document:', error);
+                            alert('Error reading Word document. Please try another file.');
+                            loading.style.display = 'none';
+                        });
+                };
+                
+                reader.readAsArrayBuffer(file);
+            }
+            
+            // Summarize text function
+            summarizeBtn.addEventListener('click', function() {
+                const text = inputText.value.trim();
+                
+                if (text === '') {
+                    alert('Please enter some text or upload a file to summarize.');
+                    return;
+                }
+                
+                loading.style.display = 'block';
+                
+                // Simulate processing delay for UX
+                setTimeout(() => {
+                    const summary = generateSummary(text, summaryLength.value, summaryType.value);
+                    displaySummary(summary, text);
+                    loading.style.display = 'none';
+                }, 1500);
+            });
+            
+            // Generate summary
+            function generateSummary(text, length, type) {
+                // Split text into sentences
+                const sentences = text.match(/[^\.!\?]+[\.!\?]+/g) || [];
+                
+                if (sentences.length === 0) {
+                    return text;
+                }
+                
+                // Calculate sentence scores based on word frequency
+                const wordFrequency = getWordFrequency(text);
+                const sentenceScores = sentences.map(sentence => {
+                    const words = sentence.toLowerCase().match(/\b\w+\b/g) || [];
+                    return words.reduce((score, word) => score + (wordFrequency[word] || 0), 0) / words.length;
+                });
+                
+                // Determine how many sentences to include
+                let percentToKeep;
+                switch (length) {
+                    case 'short': percentToKeep = 0.15; break;
+                    case 'medium': percentToKeep = 0.25; break;
+                    case 'long': percentToKeep = 0.35; break;
+                    default: percentToKeep = 0.25;
+                }
+                
+                const sentencesToKeep = Math.max(1, Math.ceil(sentences.length * percentToKeep));
+                
+                // Create array of {index, score} pairs and sort by score
+                const indexedScores = sentenceScores.map((score, index) => ({index, score}));
+                indexedScores.sort((a, b) => b.score - a.score);
+                
+                // Select top sentences
+                const topSentenceIndices = indexedScores
+                    .slice(0, sentencesToKeep)
+                    .map(item => item.index)
+                    .sort((a, b) => a - b); // Sort by original position
+                
+                // Generate the summary based on the type
+                if (type === 'extractive') {
+                    // Extractive summary (key sentences in order)
+                    return topSentenceIndices.map(index => sentences[index].trim()).join(' ');
+                } else {
+                    // Bullet point summary
+                    return topSentenceIndices.map(index => '• ' + sentences[index].trim()).join('\n\n');
+                }
+            }
+            
+            // Get word frequency for scoring
+            function getWordFrequency(text) {
+                const words = text.toLowerCase().match(/\b\w+\b/g) || [];
+                const stopWords = new Set([
+                    'a', 'an', 'the', 'and', 'but', 'or', 'for', 'nor', 'on', 'at', 'to', 'by', 
+                    'is', 'are', 'was', 'were', 'be', 'been', 'being', 'it', 'its', 'it\'s', 'of',
+                    'in', 'that', 'this', 'these', 'those', 'with', 'as', 'from', 'have', 'has',
+                    'had', 'i', 'you', 'he', 'she', 'we', 'they', 'what', 'which', 'who', 'whom'
+                ]);
+                
+                const frequencies = {};
+                words.forEach(word => {
+                    if (!stopWords.has(word)) {
+                        frequencies[word] = (frequencies[word] || 0) + 1;
+                    }
+                });
+                
+                return frequencies;
+            }
+            
+            // Display summary and update stats
+            function displaySummary(summary, originalText) {
+                outputContent.innerHTML = summary.replace(/\n\n/g, '<br><br>');
+                
+                const originalWords = countWords(originalText);
+                const summaryWords = countWords(summary);
+                const reduction = originalWords > 0 ? Math.round((1 - summaryWords / originalWords) * 100) : 0;
+                
+                originalCount.textContent = originalWords;
+                summaryCount.textContent = summaryWords;
+                reductionPercent.textContent = `${reduction}%`;
+            }
+            
+            // Count words in text
+            function countWords(text) {
+                return (text.match(/\b\w+\b/g) || []).length;
+            }
+            
+            // Update word count on input
+            function updateWordCount() {
+                const words = countWords(inputText.value);
+                originalCount.textContent = words;
+                
+                if (outputContent.querySelector('.placeholder-text')) {
+                    summaryCount.textContent = '0';
+                    reductionPercent.textContent = '0%';
+                }
+            }
+            
+            // Copy summary to clipboard
+            copyBtn.addEventListener('click', function() {
+                const text = outputContent.innerText;
+                navigator.clipboard.writeText(text)
+                    .then(() => {
+                        const originalText = copyBtn.textContent;
+                        copyBtn.textContent = 'Copied!';
+                        setTimeout(() => {
+                            copyBtn.textContent = originalText;
+                        }, 2000);
+                    })
+                    .catch(err => {
+                        console.error('Could not copy text: ', err);
+                        alert('Could not copy text. Please try manually selecting and copying.');
+                    });
+            });
+            
+            // Download summary
+            downloadBtn.addEventListener('click', function() {
+                if (outputContent.querySelector('.placeholder-text')) {
+                    alert('Please generate a summary first.');
+                    return;
+                }
+                
+                const text = outputContent.innerText;
+                const blob = new Blob([text], {type: 'text/plain'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'summary.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+            
+            // Clear all fields
+            clearBtn.addEventListener('click', function() {
+                inputText.value = '';
+                outputContent.innerHTML = '<p class="placeholder-text">Your summary will appear here...</p>';
+                originalCount.textContent = '0';
+                summaryCount.textContent = '0';
+                reductionPercent.textContent = '0%';
+                fileInput.value = '';
+                fileName.textContent = '';
+            });
+            
+            // Input text change event for live word count
+            inputText.addEventListener('input', updateWordCount);
+        });
+    </script>
+</body>
+</html>
